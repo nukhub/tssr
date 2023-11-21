@@ -1,0 +1,22 @@
+@echo off
+md 20231001\henabd
+md 20231001\vidale
+md 20231001\goubri
+md 20231001\bouced
+md 20231001\haudid
+md 20231001\margal
+md 20231001\limhat
+md 20231001\braiva
+md 20231001\casjoe
+md 20231001\maulea
+md 20231001\roymat
+md 20231001\pepmat
+md 20231001\vasmor
+md 20231001\hamnad
+md 20231001\lalnic
+md 20231001\colpau
+md 20231001\badrom
+md 20231001\filvic
+md 20231001\errwil
+md commun
+pause
