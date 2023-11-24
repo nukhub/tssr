@@ -1,0 +1,1 @@
+REG ADD "HKEY_USERS\.DEFAULT\Control Panel\Keyboard" /v InitialKeyboardIndicators /d "2" 
