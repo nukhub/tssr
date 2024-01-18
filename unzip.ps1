@@ -1,57 +1,97 @@
 ﻿# liste les archives, situées dans le même dossier que le script
 
-$archives = Get-ChildItem -File -Path * -Include *.zip,*.7z,*.rar,*.tar,*.gz,*.tar.gz
+$allArchives = Get-ChildItem -File -Path * -Include *.zip,*.7z,*.rar,*.tar,*.gz,*.tar.gz
+
+if (-not $allArchives) {
+    Write-Warning "Aucune archive trouvées (*.zip,*.7z,*.rar,*.tar,*.gz,*.tar.gz)"
+    Pause
+    throw
+}
 
 # rempli la table avec les infos nom de l'archive et chemin, et en donne la liste
 
-$table = [ordered]@{}
-[int]$num = 1
+$tableArchives = [ordered]@{}
+[int]$compteur = 0
 
-foreach ( $archive in $archives ) {
-    $table.Add($archive.Name, $archive.FullName)
-    Write-Host $num ":" $archive.Name "-" $archive.LastWriteTime
-    $num++
+foreach ( $item in $allArchives ) {
+    $tableArchives.Add($compteur, @($item.Name,$item.FullName,$item.BaseName))
+    Write-Host $compteur ":" $item.Name "-" $item.LastWriteTime
+    $compteur++
 }
 
 # demande à l'utilisateur de choisir l'archive
 
-[int]$choix0 = 0
-[int]$choix = 0
+Write-Host
+[int]$choix = $(Write-Host "[???] Archive à traiter (0,1,2,3...) ? " -ForegroundColor Yellow -NoNewline; Read-Host) # astuce pour ecrire le read-host en couleur
 
-Write-Host ""
-$choix0 = Read-Host -Prompt "archive à traiter (1,2,3..) ?"
-$choix = $choix0 - 1 # obligé de retirer 1 car le 1er objet de la hashtable est 0
+$choixArchive = $tableArchives[$choix]
+$nomArchive = $choixArchive[2]
 
-$lezip = $table[$choix]
+# verifie que le dossier de destination n'existe pas
 
-# extraction 7zip
+if (Test-Path -Path $nomArchive) {
+    Write-Warning "Le dossier $nomArchive existe deja."
+    Pause
+    throw    
+}
 
-$tempUnzip = ".\temp-$(get-date -f yyyyMMdd-fffffff)" # créé un dossier temporaire (ffffff sont les milisecondes)
-$7zipPath = "$env:ProgramFiles\7-Zip\7z.exe"
-Set-Alias 7Zip $7ZipPath
+# creation d'un dossier temporaire (ffffff sont les milisecondes)
 
-7zip x $lezip -o"$tempUnzip" -bsp1
+$tempUnzip = ".\temp-$(get-date -f yyyyMMdd-fffffff)"
+
+# verifie si 7zip est installé, puis extrait l'archive
+
+$7zInfo = Get-Package -Name 7-Zip*
+
+if ($7zInfo) {
+    $7zInstallLocation = $7zInfo.Metadata.Values[3]
+    $7zPath = "${7zInstallLocation}7z.exe"
+    Set-Alias 7Zip $7zPath
+    7zip x $choixArchive[1] -o"$tempUnzip" -bsp1 
+}
+# s'il y a des dossiers avec des chemins d'accés plus long que 250 caractères, ca ne marche pas, il faut absolument 7zip, donc je vire cette partie :
+# else {
+#     Write-Warning "7-Zip n'est pas installé, extraction par defaut en cours..."
+#     [Reflection.Assembly]::LoadWithPartialName("System.IO.Compression.FileSystem")
+#     [System.IO.Compression.ZipFile]::ExtractToDirectory($choixArchive[0], $tempUnzip)
+# }
+else {
+    Write-Warning "Ce script requiert l'installation de 7-Zip (https://www.7-zip.org/download.html)."
+    Pause
+    throw
+}
+
+Write-Host
 
 # liste les dossiers PackageTmp
 
 $objetPackageTmp = Get-ChildItem $tempUnzip -Recurse -Directory | Where-Object { $_.Name -eq 'PackageTmp' }
 
-# s'ils y'en a, les deplace, les renomme, et supprime le dossier temporaire, sinon, renomme juste le dossier temporaire
+# s'il y'en a, les deplaces, les renommes, et supprime le dossier temporaire, sinon, renomme juste le dossier temporaire
 
-if ($objetPackageTmp -ne $null) {
+[int]$counter = 1
+
+if ($objetPackageTmp.count -ge 2) {
     foreach ( $dossier in $objetPackageTmp ) {
         Move-Item -Path $dossier.FullName -Destination .\
-        Rename-Item -Path .\PackageTmp -NewName "Unzip_$(get-date -f yyyy-MM-dd_fffffff)"
+        Rename-Item -Path .\PackageTmp -NewName ".\$nomArchive-$counter"
+        $counter++
     }
+    Write-Warning "Plusieurs dossiers PackageTmp trouvés : déplacés et renommés en $nomArchive-X/"
+    Remove-Item $tempUnzip -Recurse -Force
+}
+elseif ($objetPackageTmp.count -eq 1) {
+    foreach ( $dossier in $objetPackageTmp ) {
+        Move-Item -Path $dossier.FullName -Destination .\
+        Rename-Item -Path .\PackageTmp -NewName ".\$nomArchive"
+    }
+    Write-Warning "Dossier PackageTmp trouvé : déplacé et renommé en $nomArchive/"
     Remove-Item $tempUnzip -Recurse -Force
 }
 else {
-
-    Rename-Item -Path $tempUnzip -NewName "Unzip_$(get-date -f yyyy-MM-dd_fffffff)"
+    Write-Warning "Aucun dossier PackageTmp trouvé : archive extraite dans $nomArchive/"
+    Rename-Item -Path $tempUnzip -NewName $nomArchive
 }
 
-Write-Host
-Write-Host "--> Archive : $lezip"
-Write-Host "--> Dossier : Unzip_$(get-date -f yyyy-MM-dd)_(random)"
 Write-Host
 pause
