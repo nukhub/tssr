@@ -1,5 +1,3 @@
-https://www.thegeekstuff.com/2014/07/hpacucli-examples/)https://www.thegeekstuff.com/2014/07/hpacucli-examples/
-
 powershell:
 https://www.youtube.com/watch?v=csuz7qSJv_Q&list=PL2j0_s2VJe2hzQuQyn6yfMS2olhhs4UnQ
 
