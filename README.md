@@ -10,3 +10,7 @@ partedUtil mklabel /dev/disks/naa.600062b2031e00402a165add7ff9c3ac msdos
 macos sur exsi:
 https://github.com/DrDonk/esxi-unlocker
 https://github.com/DrDonk/unlocker (workstation)
+
+yt:
+https://www.youtube.com/@TechWorldwithNana/videos
+https://www.youtube.com/@NetworkChuck/videos
