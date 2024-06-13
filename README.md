@@ -17,3 +17,6 @@ https://www.youtube.com/@NetworkChuck/videos
 
 arp ping:
 https://www.elifulkerson.com/projects/arp-ping.php
+
+ssh2merd:
+https://askubuntu.com/questions/311558/ssh-permission-denied-publickey
